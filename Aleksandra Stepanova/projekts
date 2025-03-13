@@ -1,0 +1,156 @@
+import pygame
+import random
+
+def evaluate(state):
+    return 1 if state % 2 == 0 else -1
+
+def minimax(state, depth, alpha, beta, maximizing):
+    if state == 1 or depth == 0:
+        return evaluate(state)
+    if maximizing:
+        max_eval = float('-inf')
+        for divisor in [2, 3, 4, 5]:
+            if state % divisor == 0:
+                new_state = state // divisor
+                eval = minimax(new_state, depth - 1, alpha, beta, False)
+                max_eval = max(max_eval, eval)
+                alpha = max(alpha, eval)
+                if beta <= alpha:
+                    break
+        return max_eval
+    else:
+        min_eval = float('inf')
+        for divisor in [2, 3, 4, 5]:
+            if state % divisor == 0:
+                new_state = state // divisor
+                eval = minimax(new_state, depth - 1, alpha, beta, True)
+                min_eval = min(min_eval, eval)
+                beta = min(beta, eval)
+                if beta <= alpha:
+                    break
+        return min_eval
+
+def computer_move(state):
+    best_move = None
+    best_value = float('-inf')
+    for divisor in [2, 3, 4, 5]:
+        if state % divisor == 0:
+            new_state = state // divisor
+            move_value = minimax(new_state, 3, float('-inf'), float('inf'), False)
+            if move_value > best_value:
+                best_value = move_value
+                best_move = divisor
+    return best_move if best_move else 2
+
+def is_game_over(number):
+    return all(number % d != 0 for d in [2, 3, 4, 5])
+
+pygame.init()
+WIDTH, HEIGHT = 800, 800
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Spēle")
+WHITE, BLACK, BLUE = (255, 255, 255), (0, 0, 0), (0, 0, 255)
+font = pygame.font.Font(None, 36)
+numbers = [random.randint(30000, 50000) for _ in range(5)]
+selected_number = current_number = None
+history, points, bank = [], 0, 0
+show_history = False
+
+# Иконка информации
+info_button = pygame.Rect(WIDTH - 100, 10, 40, 40)
+show_info = False  
+
+def draw_info_window():
+    pygame.draw.rect(screen, WHITE, (WIDTH // 4, HEIGHT // 4, WIDTH // 2, HEIGHT // 2))
+    pygame.draw.rect(screen, BLACK, (WIDTH // 4, HEIGHT // 4, WIDTH // 2, HEIGHT // 2), 3)
+
+    
+
+
+# Выбор первого игрока
+first_player = None
+while first_player not in ["cilveks", "dators"]:
+    first_player = input("Kas sāk spēli? (cilveks/dators): ").strip().lower()
+
+player_turn = first_player == "cilveks"
+
+def draw_text(text, x, y, color=BLACK):
+    screen.blit(font.render(text, True, color), (x, y))
+
+running = True
+while running:
+    
+    screen.fill(WHITE)
+    draw_text(f"Punkti: {points}", 20, 20)
+    draw_text(f"Banka: {bank}", WIDTH - 200, 20)
+    draw_text(f"Izvēlētais: {selected_number if selected_number else '-'}", 20, 180)
+    draw_text(f"Pašreizējais: {current_number if current_number else '-'}", WIDTH // 2, 180)
+    draw_text(f"Spēlētājs: {'Cilvēks' if player_turn else 'Dators'}", WIDTH // 2, 220)
+    number_buttons = [pygame.draw.rect(screen, BLUE, pygame.Rect(150 + i * 120, 100, 80, 40)) for i, num in enumerate(numbers)]
+
+
+    history_button = pygame.draw.rect(screen, BLUE, pygame.Rect(20, 220, 200, 40))
+    draw_text("Parādīt vēsturi", 30, 230, WHITE)
+    operation_buttons = {d: pygame.draw.rect(screen, BLUE, pygame.Rect(400 + i * 100, 300, 80, 40)) for i, d in enumerate([2, 3, 4, 5])}
+    for i, num in enumerate(numbers):
+        draw_text(str(num), 160 + i * 120, 110, WHITE)
+    for i, d in enumerate([2, 3, 4, 5]):
+        draw_text(str(d), 420 + i * 100, 310, WHITE)
+
+    if show_history:
+        draw_text("Vēsture:", 10, 270)
+        for i, action in enumerate(history):
+            draw_text(action, 10, 300 + i * 30)
+
+    if not player_turn and current_number:
+        pygame.time.delay(1000)
+        move = computer_move(current_number)
+        if current_number % move == 0:
+            new_number = current_number // move
+            history.append(f"Dators: {current_number} / {move} = {new_number}")
+            current_number = new_number
+            points += 1 if new_number % 2 else -1
+            bank += 1 if new_number % 10 in (0, 5) else 0
+
+        if is_game_over(current_number):
+            final_score = points - bank if points % 2 else points + bank
+            winner = "Cilvēks" if (final_score % 2 == 1 and first_player == "cilveks") else "Dators"
+            history.append(f"Spēle beidzas! Gala punkti: {final_score}. Uzvarētājs: {winner}")
+            player_turn = None
+        else:
+            player_turn = True
+            
+            
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = event.pos
+            for rect, num in zip(number_buttons, numbers):
+                if rect.collidepoint(x, y):
+                    selected_number = current_number = num
+                    history = [f"Cilvēks izvēlējās: {num}"]
+                    show_history = False
+                    player_turn = first_player == "cilveks"
+            if player_turn:
+                for divisor, rect in operation_buttons.items():
+                    if rect.collidepoint(x, y) and current_number % divisor == 0:
+                        new_number = current_number // divisor
+                        history.append(f"Cilvēks: {current_number} / {divisor} = {new_number}")
+                        current_number = new_number
+                        points += 1 if new_number % 2 else -1
+                        bank += 1 if new_number % 10 in (0, 5) else 0
+
+                        if is_game_over(current_number):
+                            final_score = points - bank if points % 2 else points + bank
+                            winner = "Cilvēks" if (final_score % 2 == 1 and first_player == "cilveks") else "Dators"
+                            history.append(f"Spēle beidzas! Gala punkti: {final_score}. Uzvarētājs: {winner}")
+                            player_turn = None
+                        else:
+                            player_turn = False
+                        break
+            if history_button.collidepoint(x, y):
+                show_history = not show_history
+    pygame.display.flip()
+pygame.quit()
