@@ -85,7 +85,7 @@ def draw_rules():
         "skaitlis, tad otrais spēlētājs."
     ]
     for i, line in enumerate(rules_text):
-        draw_text(line, 400, 160 + i * 25, 16, (255, 255, 255)) 
+        draw_text(line, 400, 140 + i * 25, 16, (255, 255, 255)) 
 
 def toggle_rules():
     global show_rules
