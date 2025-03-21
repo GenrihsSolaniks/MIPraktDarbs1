@@ -1,6 +1,5 @@
-# uzlabots: vēsture un restart poga
+# uzlabots: vēsture, restart poga, info(?) poga
 
-# vēl nav:
 # pievienot alfa-betta algoritmu no Genriha koda, nomainīt minimaksa + pirms katras spēles dod player izvēli pēc kura algoritma spēlēs AI
 # NAV HEIRISTISKĀ FUNKCIJA
 # NAV IZVĒLES KURŠ SĀK SPĒLI (pašlaik visu laiku pirmais izvēlas skaitli Player. Vajag pirms katras spēles dod izvēli player, kurš uzsāks spēli un izvēlēsies skaitli - player vai AI)
@@ -49,17 +48,6 @@ def minimax(num, depth, is_maximizing, alpha, beta):
                     break
         return min_eval
 
-
-    
-pygame.init()
-
-WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Number Division Game")
-font = pygame.font.SysFont("Verdana", 32, bold=False)
-small_font = pygame.font.SysFont("Verdana", 24, bold=False)
-
-
 def draw_text(text, x, y, size=32, color=(255, 255, 255)):
     font = pygame.font.SysFont("Verdana", size, bold=False)
     text_surface = font.render(text, True, color)
@@ -76,6 +64,42 @@ def draw_button(text, x, y, w, h, color, hover_color, disabled, action):
         pygame.time.delay(200)
         action()
 
+def draw_rules():
+    pygame.draw.rect(screen, (50, 50, 50), (100, 100, 600, 400))  
+    pygame.draw.rect(screen, (255, 0, 0), (650, 110, 40, 40))  
+    draw_text("X", 670, 130, 30, (255, 255, 255))  
+    rules_text = [
+        "Spēles noteikumi:",
+        "",
+        "Spēlētāji izdara gājienus pēc kārtas, katrā gājienā dalot pašreizējā ", 
+        "brīdī esošu skaitli ar 2,3,4 vai 5. Skaitli ir iespējams sadalīt tikai ",
+        "tajā gadījumā, ja rezultātā veidojas vesels skaitlis. Ja dalīšanas ",
+        "rezultātā veidojas nepāra skaitlis, tad kopīgajam punktu skaitam tiek  ",
+        "pieskaitīts 1 punkts, ja pāra skaitlis, tad no kopīgā punktu skaita tiek ",
+        "atņemts viens punkts. Savukārt, ja tiek iegūts skaitlis, kas beidzas ar 0 ",
+        "vai 5, tad bankai tiek pieskaitīts 1 punkts. Spēle beidzas, kad iegūto ",
+        "skaitli vairs nav iespējams sadalīt. Ja kopīgais punktu skaits ir nepāra",
+        "skaitlis, tad no tā atņem bankā uzkrātos punktus. Ja tas ir pāra skaitlis, ",
+        "tad tam pieskaita bankā uzkrātos punktus. Ja kopīgā punktu skaita gala ",
+        "vērtība ir nepāra skaitlis, uzvar spēlētājs, kas uzsāka spēli. Ja pāra ",        
+        "skaitlis, tad otrais spēlētājs."
+    ]
+    for i, line in enumerate(rules_text):
+        draw_text(line, 400, 160 + i * 25, 16, (255, 255, 255)) 
+
+def toggle_rules():
+    global show_rules
+    show_rules = not show_rules
+
+pygame.init()
+
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Number Division Game")
+font = pygame.font.SysFont("Verdana", 32, bold=False)
+small_font = pygame.font.SysFont("Verdana", 24, bold=False)
+show_rules = False  
+
 def reset_game():
     global selected_number, starting_number, available_numbers, points, bank, player_turn, game_over, history, winner, choosing
     available_numbers = generate_numbers()
@@ -89,7 +113,6 @@ def reset_game():
     winner = None
     choosing = True
     
-
 def check_game_over():
     global game_over, winner, points, bank
     if not any(is_valid_division(selected_number, d) for d in [2, 3, 4, 5]):
@@ -103,10 +126,7 @@ def choose_number(num):
     selected_number = num
     starting_number = num  
     choosing = False
-
-
-    
-        
+     
 def divide_number(divisor):
     global selected_number, points, bank, player_turn
     if is_valid_division(selected_number, divisor) and player_turn:
@@ -141,30 +161,34 @@ def ai_move():
     check_game_over()
     pygame.display.flip()
 
-
-
 reset_game()
 
 running = True
 while running:
     screen.fill((30, 30, 30))
+    draw_button("?", 750, 10, 40, 40, (200, 200, 200), (255, 255, 255), False, toggle_rules)
     draw_text(f"Starting Number: {starting_number if starting_number else 'Not chosen'}", WIDTH // 2, 20)
     draw_text(f"Current Number: {selected_number}", WIDTH // 2, 50)
     draw_text(f"Points: {points} | Bank: {bank}", WIDTH // 2, 90)
     for i, d in enumerate([2, 3, 4, 5]):
         disabled = not is_valid_division(selected_number, d)
         draw_button(f"/{d}", WIDTH // 2 - 130 + i * 75, 140, 50, 50, (100, 100, 100) if disabled else (100, 200, 100), (150, 255, 150), disabled, partial(divide_number, d))
-    if choosing:
-        while choosing:
-            screen.fill((30, 30, 30))
-            draw_text("Choose a starting number:", WIDTH // 2, 100, 36)
-            for i, num in enumerate(available_numbers):
-                draw_button(f"{num}", WIDTH // 2 - 50, 150 + i * 60, 100, 50, (200, 200, 200), (255, 255, 255), False, partial(choose_number, num))
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-            pygame.display.flip()
+    if choosing: 
+        screen.fill((30, 30, 30))
+        draw_text("Choose a starting number:", WIDTH // 2, 100, 36)
+        for i, num in enumerate(available_numbers):
+            draw_button(f"{num}", WIDTH // 2 - 50, 150 + i * 60, 100, 50, (200, 200, 200), (255, 255, 255), False, partial(choose_number, num))
+                    
+    if show_rules:
+        draw_rules()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN and show_rules:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            if 650 <= mouse_x <= 690 and 110 <= mouse_y <= 150:
+                show_rules = False  
 
     if game_over:
         draw_text(winner, WIDTH // 2, 220, 40, (255, 0, 0))
@@ -177,7 +201,5 @@ while running:
     if not player_turn and selected_number and not game_over:
         ai_move()
     pygame.display.flip()
-
-
 
 pygame.quit()
