@@ -1,5 +1,7 @@
-# pievienot alfa-betta algoritmu no Genriha koda + pirms katras spēles dod player izvēli pēc kura algoritma spēlēs AI
-# uzlabot RESTART pogu (vajag lai pēc restart varētu no jauna izvēlēties sākuma skaitli utt.)
+# uzlabots: vēsture un restart poga
+
+# vēl nav:
+# pievienot alfa-betta algoritmu no Genriha koda, nomainīt minimaksa + pirms katras spēles dod player izvēli pēc kura algoritma spēlēs AI
 # NAV HEIRISTISKĀ FUNKCIJA
 # NAV IZVĒLES KURŠ SĀK SPĒLI (pašlaik visu laiku pirmais izvēlas skaitli Player. Vajag pirms katras spēles dod izvēli player, kurš uzsāks spēli un izvēlēsies skaitli - player vai AI)
 # ja uzreiz ir tā, ka skaitli nav iespējams sadalīt, tad it kā ir jāizvada paziņojums, kurš uzvarēja(?)
@@ -9,6 +11,7 @@ import pygame
 import random
 import math
 from functools import partial
+
 
 def generate_numbers():
     return random.sample(range(30000, 50001), 5)
@@ -46,6 +49,8 @@ def minimax(num, depth, is_maximizing, alpha, beta):
                     break
         return min_eval
 
+
+    
 pygame.init()
 
 WIDTH, HEIGHT = 800, 600
@@ -72,9 +77,10 @@ def draw_button(text, x, y, w, h, color, hover_color, disabled, action):
         action()
 
 def reset_game():
-    global selected_number, available_numbers, points, bank, player_turn, game_over, history, winner, choosing
+    global selected_number, starting_number, available_numbers, points, bank, player_turn, game_over, history, winner, choosing
     available_numbers = generate_numbers()
     selected_number = None
+    starting_number = None
     points = 0
     bank = 0
     player_turn = True
@@ -93,8 +99,9 @@ def check_game_over():
         history.append(f"Final Score: {final_score}")
 
 def choose_number(num):
-    global selected_number, choosing
+    global selected_number, starting_number, choosing
     selected_number = num
+    starting_number = num  
     choosing = False
 
 
@@ -133,29 +140,31 @@ def ai_move():
     player_turn = True
     check_game_over()
     pygame.display.flip()
-    
+
+
+
 reset_game()
-while choosing:
-    screen.fill((30, 30, 30))
-    draw_text("Choose a starting number:", WIDTH // 2, 100, 36)
-    for i, num in enumerate(available_numbers):
-        draw_button(f"{num}", WIDTH // 2 - 50, 150 + i * 60, 100, 50, (200, 200, 200), (255, 255, 255), False, partial(choose_number, num))
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-    pygame.display.flip()
 
 running = True
 while running:
     screen.fill((30, 30, 30))
-    draw_text(f"Starting Number: {available_numbers[0]}", WIDTH // 2, 20)
+    draw_text(f"Starting Number: {starting_number if starting_number else 'Not chosen'}", WIDTH // 2, 20)
     draw_text(f"Current Number: {selected_number}", WIDTH // 2, 50)
     draw_text(f"Points: {points} | Bank: {bank}", WIDTH // 2, 90)
     for i, d in enumerate([2, 3, 4, 5]):
         disabled = not is_valid_division(selected_number, d)
         draw_button(f"/{d}", WIDTH // 2 - 130 + i * 75, 140, 50, 50, (100, 100, 100) if disabled else (100, 200, 100), (150, 255, 150), disabled, partial(divide_number, d))
-
+    if choosing:
+        while choosing:
+            screen.fill((30, 30, 30))
+            draw_text("Choose a starting number:", WIDTH // 2, 100, 36)
+            for i, num in enumerate(available_numbers):
+                draw_button(f"{num}", WIDTH // 2 - 50, 150 + i * 60, 100, 50, (200, 200, 200), (255, 255, 255), False, partial(choose_number, num))
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+            pygame.display.flip()
 
     if game_over:
         draw_text(winner, WIDTH // 2, 220, 40, (255, 0, 0))
@@ -168,4 +177,7 @@ while running:
     if not player_turn and selected_number and not game_over:
         ai_move()
     pygame.display.flip()
+
+
+
 pygame.quit()
