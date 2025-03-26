@@ -4,7 +4,7 @@ import math
 from functools import partial
 
 # =======================
-# КЛАССЫ ДЛЯ ГЕНЕРАЦИИ ДЕРЕВА
+# KOKA ĢENERĀCIJAS KLĀSSI
 # =======================
 
 class TreeNode:
@@ -34,13 +34,13 @@ class Tree:
         return node
 
     def _generate_children(self, node):
-        # Если значение уже 0, дальше делить бессмысленно
+        # Ja vērtība jau ir 0, tālāk dalīt nav jēgas
         if node.value == 0:
             return
         for divisor in [2, 3, 4, 5]:
             if node.value % divisor == 0:
                 child_value = node.value // divisor
-                # Если результат деления равен 0 или не изменился, пропускаем
+                # Ja dalīšanas rezultāts ir 0 vai nav mainījies, izlaist
                 if child_value <= 0 or child_value == node.value:
                     continue
                 child = self._create_node(child_value, parent=node)
@@ -48,19 +48,19 @@ class Tree:
                 self._generate_children(child)
 
     def _calculate(self, node):
-        # Расчёт банка: если число заканчивается на 0 или 5, банк увеличивается на 1
+        # Bankas aprēķins: ja skaitlis beidzas ar 0 vai 5, banka palielinās par 1
         if node.value % 10 == 0 or node.value % 10 == 5:
             node.bank = node.parent.bank + 1 if node.parent else 0
         else:
             node.bank = node.parent.bank if node.parent else 0
-        # Расчёт очков: для чётного числа вычитается 1, для нечётного прибавляется 1
+        # Rezultātu aprēķins: pāra skaitlim atņem 1, nepāra pievieno 1
         if node.value % 2 == 0:
             node.score = node.parent.score - 1 if node.parent else 0
         else:
             node.score = node.parent.score + 1 if node.parent else 0
 
     def calculate_heuristic_values(self, node, ai_goes_first, minimax_chosen, alpha=float('-inf'), beta=float('inf')):
-        # Базовый случай: если у узла нет детей, он является листом
+        # Pamata gadījums: ja mezlim nav bērnu, tas ir lapas
         if not node.children:
             final_score = node.score + node.bank if node.score % 2 == 0 else node.score - node.bank
             if ai_goes_first:
@@ -70,7 +70,7 @@ class Tree:
             node.heuristic_sum = node.heuristic_value
             return (node.heuristic_value, node.heuristic_sum)
         
-        # Ветка без альфа-бета отсечения (чистый minimax)
+        # Zara bez alfa-beta nogriezuma (tīrs minimax)
         if minimax_chosen:
             if ai_goes_first:
                 node.heuristic_value = float('-inf')
@@ -90,7 +90,7 @@ class Tree:
                         continue
                     node.heuristic_value = min(node.heuristic_value, child_value)
                     node.heuristic_sum += child_sum
-        # Ветка с альфа-бета отсечением
+        # Zara ar alfa-beta nogriezumu
         else:
             if ai_goes_first:
                 node.heuristic_value = float('-inf')
@@ -121,7 +121,7 @@ class Tree:
         return (node.heuristic_value, node.heuristic_sum)
 
 # =======================
-# Функции логики игры
+# SPĒLES LOĢIKAS FUNKCIJAS
 # =======================
 
 def generate_numbers():
@@ -136,7 +136,7 @@ def calculate_points(num):
     return points, bank
 
 # =======================
-# Функции отрисовки элементов
+# ELEMENTU ZĪMĒŠANAS FUNKCIJAS
 # =======================
 
 def draw_text(text, x, y, size=32, color=(255,255,255)):
@@ -178,7 +178,7 @@ def toggle_rules():
     show_rules = not show_rules
 
 # =======================
-# Инициализация Pygame и глобальных переменных
+# PYGAME UN GLOBĀLO MAINĪGO INICIALIZĀCIJA
 # =======================
 
 pygame.init()
@@ -189,10 +189,10 @@ font = pygame.font.SysFont("Verdana", 32, bold=False)
 small_font = pygame.font.SysFont("Verdana", 24, bold=False)
 show_rules = False
 
-# Фазы игры:
+# Spēles fāzes:
 # "settings_algorithm" -> "settings_first" -> "choose_number" -> "game" -> "game_over"
 game_phase = "settings_algorithm"
-ai_goes_first = None      # True, если ИИ ходит первым
+ai_goes_first = None      # True, ja AI spēlē pirmo
 minimax_chosen = None     # True: minimax, False: alpha-beta
 player_turn = None
 selected_number = None
@@ -205,7 +205,7 @@ history = []
 choosing = True
 
 # =======================
-# Функции переходов между фазами
+# FĀŽU PĀREJAS FUNKCIJAS
 # =======================
 
 def select_algorithm(is_minimax):
@@ -274,7 +274,7 @@ def ai_move():
     best_move = None
     best_value = float('-inf')
     for child in tree.root.children:
-        # Определяем, какой делитель использовался:
+        # Nosakām, kurš dalītājs tika izmantots:
         divisor = tree.root.value // child.value if child.value != 0 and (tree.root.value // child.value) in [2,3,4,5] else None
         if divisor is not None and child.heuristic_value is not None and child.heuristic_value > best_value:
             best_value = child.heuristic_value
@@ -291,7 +291,7 @@ def ai_move():
     pygame.display.flip()
 
 # =======================
-# Функции отрисовки экранов (фазы игры)
+# EKRĀNU ZĪMĒŠANAS FUNKCIJAS (SPĒLES FĀZES)
 # =======================
 
 def draw_settings_algorithm():
@@ -341,10 +341,10 @@ def draw_game():
                     (200,200,200), (255,255,255), False, reset_game)
 
 # =======================
-# Основной игровой цикл
+# GALVENĀ SPĒLES CILPA
 # =======================
 
-reset_game()  # Переход к выбору алгоритма
+reset_game()  # Pāreja uz algoritma izvēli
 
 running = True
 while running:
